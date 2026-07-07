@@ -1,15 +1,30 @@
 {
   "name": "google-sheets-lambda",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "An AWS Lambda that reads rows from a Google Sheet and returns them as JSON",
+  "type": "module",
+  "main": "dist/index.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.mjs --banner:js=\"import { createRequire } from 'module'; const require = createRequire(import.meta.url);\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "aws-lambda",
+    "google-sheets"
+  ],
+  "author": "Chris Boakes",
   "license": "ISC",
   "dependencies": {
-    "google-spreadsheet": "^3.0.10"
+    "google-auth-library": "^10.1.0",
+    "google-spreadsheet": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }
