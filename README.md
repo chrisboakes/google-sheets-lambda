@@ -1,43 +1,57 @@
 # Google Sheets Lambda
 
-A simple lambda to integrate with the Google Sheets API
+An AWS Lambda that reads all rows from the first tab of a Google Sheet and returns them as JSON, keyed by the sheet's header row.
 
-These are the steps to get this up and running. Firstly, clone this repo, then:
+Written in TypeScript, authenticated with a Google service account via environment variables — no credentials live in the repo.
 
-## Install the package
+## Install
 
 ```sh
 npm install
 ```
 
-## Authenticate the request
+## Set up a Google service account
 
 In your browser:
 
-- Head over to the [Google Developers Console](https://console.developers.google.com/) and create a new project
-- Now go to **Enable APIs and Services** and enable the **Google Drive API**
-- Now navigate to **Create Credentials**:
-	- Select **Google Drive API** from *Which API are you using?*
-	- Select **Web server** from *Where will you be calling the API from*
-	- Select **Application data** from *What data will you be accessing?*
-	- Select **No** for the *API with App Engine* question
-	- Create some credentials (setting the *Role* as **Editor**)
-	- Ensure **JSON** is selected
+- Head over to the [Google Cloud Console](https://console.cloud.google.com/) and create (or select) a project
+- Go to **APIs & Services → Enable APIs and Services** and enable the **Google Sheets API**
+- Go to **IAM & Admin → Service Accounts** and create a service account (no roles are needed)
+- Open the service account, go to the **Keys** tab, and create a new **JSON** key — this downloads a JSON file
 
-The above steps should prompt a download of a JSON file. Rename this file to `client_secret.json` and put it in the root directory of this repo.
+From the downloaded JSON file you'll need two values:
 
-Open your `client_secret.json` file and copy the email address (without the quotation marks) next to `client_email`. Go to the spreadsheet you've created and share it with this email address.
+- `client_email`
+- `private_key`
 
-## Add the ID of the spreadsheet
+Finally, open your Google Sheet and **share it with the `client_email` address** (Viewer access is enough).
 
-Head back over to the browser and fetch the [ID of the spreadsheet](https://stackoverflow.com/questions/36061433/how-to-do-i-locate-a-google-spreadsheet-id) from the URL.
+## Configure the Lambda
 
-Update the variable `googleSheetID` with this ID.
+Create the Lambda with the **Node.js 22.x** runtime and set these environment variables (Configuration → Environment variables):
 
-## Alter the cleanData method
+| Variable | Value |
+| --- | --- |
+| `GOOGLE_SHEET_ID` | The ID of your spreadsheet, from its URL (`https://docs.google.com/spreadsheets/d/<THIS PART>/edit`) |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | The `client_email` from the JSON key file |
+| `GOOGLE_PRIVATE_KEY` | The `private_key` from the JSON key file (paste it as-is, including the `\n` sequences — the code restores the newlines) |
 
-Make sure that the `cleanData` method contains all of your column names. The ones included are just a sample.
+For anything beyond a hobby project, consider storing the private key in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) or SSM Parameter Store instead of a plain environment variable.
 
-## ZIP it up
+## Build and deploy
 
-Zip up the entire repo and upload it to your Lambda, ensuring all of the code in the repo goes in the root of your Lambda function's directory.
+```sh
+npm run build
+```
+
+This bundles everything into a single file at `dist/index.mjs`. Zip the contents of `dist` and upload it to your Lambda, with the handler set to `index.handler`:
+
+```sh
+cd dist && zip -r ../lambda.zip . && cd ..
+```
+
+## Test
+
+```sh
+npm test
+```
